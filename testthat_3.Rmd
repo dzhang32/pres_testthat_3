@@ -1,0 +1,332 @@
+---
+title: "Testthat - 3rd edition"
+output: ioslides_presentation
+author: 
+  - name: David Zhang
+    affiliation: UCL
+    email: dyzhang32@gmail.com
+date: "`r format(Sys.time(), '%d %B %Y')`"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Outline
+
+- Package development workflow
+- 3 levels of R package testing
+- Why unit test?
+- Packages for unit testing in R
+- `testthat` overview
+- What's new in `testthat` 3rd edition? 
+
+## Package development workflow 
+
+```{r package-dev-workflow, echo = FALSE, out.height = "500px", fig.align = "center"}
+knitr::include_graphics("https://lucid.app/publicSegments/view/22dc40f9-49b9-47ef-b04c-9fae764bf492/image.png")
+```
+
+## 3 levels of R package testing
+
+- **Unit testing** for individual functions
+- **R CMD Check**/**BiocCheck** for overall package structure and formating
+- **GitHub actions** to test on multiple OS
+
+## Why unit test?
+
+- You already do this manually
+
+    1. Create a function
+    2. Assess output on console 
+    3. Repeat
+    
+- Unit testing **automates** this process
+- Future updates won't break existing code
+- Guides you to follow **functional programming** principles
+
+## Packages for unit testing in R
+
+- `testthat` - https://cran.r-project.org/web/packages/RUnit/vignettes/RUnit.pdf)
+- `RUnit` - https://cran.r-project.org/web/packages/RUnit/vignettes/RUnit.pdf)
+
+## `testthat` overview
+
+- Used in **~5000** packages in CRAN
+- Easy functions included in `usethis` to generate unit tests: 
+    - `usethis::use_testthat` - creates test directory, adds `testthat` to Suggests
+    - `usethis::use_test("function_name")` 
+- If you catch a bug, write a test
+    
+## `testthat` example
+
+- You have an expectation - `expect_*`
+- That **must** match your `object`
+    
+```{r testthat-pseudo-ex}
+
+x <- 1:3
+y <- c(1:3, NA)
+
+testthat::test_that("test mean", {
+  testthat::expect_equal(object = mean(x), expected = 2)
+  testthat::expect_true(object = is.na(mean(y)))
+  testthat::expect_error(object = mean(c("1", "2")))
+})
+
+```
+
+## `testthat` example
+
+```{r testthat-ex-1}
+
+get_sum_stats <- function(df, sum_vars, group_vars = NULL, 
+                          sum_funcs = list(mean = mean, sd = sd)){
+    
+    if (!is.null(group_vars)) {
+        df <- df %>%
+            dplyr::group_by_at(.vars = group_vars)
+    }
+    
+    df_summary <- df %>%
+        dplyr::summarise_at(
+            .vars = sum_vars,
+            .funs = sum_funcs
+        )
+    
+    return(df_summary)
+    
+}
+
+```
+
+## `testthat` example
+
+```{r testthat-ex-2}
+
+
+df <- dplyr::tibble(var1 = rep(c("a", "b", "c"), 4), 
+                    var2 = rep(c("some", "example", "groups"), 4), 
+                    x = c(1:6, 6:1), 
+                    y = 1:12)
+
+df
+
+```
+## `testthat` example
+
+```{r testthat-ex-3}
+get_sum_stats(df, sum_vars = "y", group_vars = c("var1", "var2"))
+```
+
+## `testthat` example
+
+```{r testthat-ex-4}
+
+df_summary <- get_sum_stats(df, sum_vars = "y", 
+                            group_vars = c("var1", "var2"))
+
+testthat::test_that("get_sum_stats has correct output", {
+
+    testthat::expect_equivalent(
+        df_summary,
+        df %>%
+            dplyr::group_by(var1, var2) %>%
+            dplyr::summarise_at("y", list(mean, sd))
+    )
+})
+
+```
+
+## `testthat` example
+
+```{r testthat-ex-5}
+
+df_summary %>% 
+    dplyr::filter(!duplicated(sd))
+
+```
+
+## `testthat` example
+
+```{r testthat-ex-6}
+
+df_summary %>% 
+    dplyr::ungroup() %>% 
+    dplyr::filter(!duplicated(sd))
+
+```
+
+## `testthat` example
+
+```{r testthat-ex-7}
+
+get_sum_stats <- function(df, sum_vars, group_vars = NULL, 
+                      sum_funcs = list(mean = mean, sd = sd)){
+    
+    if (!is.null(group_vars)) {
+        df <- df %>%
+            dplyr::group_by_at(.vars = group_vars)
+    }
+    
+    df_summary <- df %>%
+        dplyr::summarise_at(
+            .vars = sum_vars,
+            .funs = sum_funcs
+        ) %>% 
+        ungroup()
+    
+    return(df_summary)
+    
+}
+
+```
+
+## `testthat` example
+
+```{r testthat-ex-8}
+
+df_summary <- get_sum_stats(df, sum_vars = "y", 
+                            group_vars = c("var1", "var2"))
+
+testthat::test_that("get_sum_stats has correct output", {
+
+    testthat::expect_equal(
+        df_summary %>% 
+            dplyr::filter(!duplicated(sd)) %>% 
+            nrow(), 
+        1
+    )
+})
+
+```
+
+## What's new in `testthat` 3rd edition? 
+
+- The idea of **editions** 
+- Deprecation of various old features
+- **waldo** comparison of differences
+- **Snapshot** tests
+- Parallel testing
+
+## Editions
+
+- Optional opt in for new features
+- Enable backwards compatibility
+- Default for new packages
+- for old you have to include in in your `DESCRIPTION`:
+
+```{r testthat-3-desc, eval = FALSE}
+Config/testthat/edition: 3
+```
+
+## Deprecations
+
+- `context`
+- `expect_is` -> `expect_s3_class`/`expect_s4_class`
+- `expect_equivalent` -> `expect_equal`/`expect_identical`
+
+## Waldo comparisons example
+
+```{r waldo-ex-1, error = TRUE}
+
+testthat::local_edition(2)
+
+testthat::expect_equal(as.character(1:10), as.factor(1:10))
+
+```
+## Waldo comparisons example
+
+```{r waldo-ex-2, error = TRUE}
+
+testthat::local_edition(3)
+
+testthat::expect_equal(as.character(1:10), as.factor(1:10))
+
+```
+## Waldo comparisons example
+
+```{r waldo-ex-3, error = TRUE}
+
+testthat::local_edition(2)
+
+testthat::expect_equal(iris[-1], iris)
+
+```
+## Waldo comparisons example
+
+```{r waldo-ex-4, error = TRUE}
+
+testthat::local_edition(3)
+
+testthat::expect_equal(iris[-1], iris)
+
+```
+
+## Snapshot tests
+
+- For expectations that are difficult to describe in code or text
+- `.html` output
+- `ggplot`s
+- Snapshot tests save the actual output upon first run, then compares expectation to this in subsequent runs. 
+- Supersedes `verify_output()`
+
+## Snapshot tests example
+
+```{r snapshot-ex-1, out.height = "350px"}
+
+snapshot_plot <- tibble::tibble(x = 1:5, y = 1:5) %>%
+    ggplot2::ggplot(aes(x, y)) +
+    ggplot2::geom_point()
+
+snapshot_plot
+
+```
+
+```{r snapshot-ex-2}
+
+testthat::local_edition(3)
+
+testthat::test_that("snapshot plot is correct", {
+    
+    testthat::expect_true(is(snapshot_plot, "ggplot"))
+    
+})
+
+```
+
+## Snapshot tests example
+
+- The remaining examples require the structure of package so will shown interactively
+- Snapshot workflow:
+
+```{r snapshot-ex-3, eval = FALSE}
+
+usethis::create_package("~/testsnapshot")
+usethis::use_testthat()
+usethis::use_test("test_snapshot")
+
+```
+
+## Parallel testing
+
+- Add to `DESCRIPTION`:
+
+```{r para-desc, eval = FALSE}
+Config/testthat/parrallel: true
+```
+
+- Speeds up tests, but does have an overhead
+- Run in random order, can't have dependencies between tests
+
+## Resources 
+
+- R packages testing page - https://r-pkgs.org/tests.html
+- `testthat` vignette - https://testthat.r-lib.org/
+- Webinar on new functionality in `testthat` edition 3 - https://rstudio.com/resources/webinars/testthat-3/
+
+
+
+
+
