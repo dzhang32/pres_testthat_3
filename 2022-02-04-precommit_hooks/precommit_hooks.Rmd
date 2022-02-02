@@ -1,0 +1,127 @@
+---
+title: "Precommit hooks in R"
+author: "David Zhang"
+institute: "UCL"
+date: "2022/02/04 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+<!-- change font of all slides via css -->
+<!-- https://stackoverflow.com/questions/53481699/customize-font-size-for-all-the-slides-in-xaringan -->
+
+<style type="text/css">
+.remark-slide-content {
+    font-size: 34px;
+    padding: 0.75em 1em 0.75em 1em;
+}
+</style>
+
+# Outline 
+
+- The what and the why? 
+- Use cases
+- Alternatives and trade offs
+- In practice
+
+---
+
+# What are pre-commit hooks? 
+
+- https://pre-commit.com
+- A developer tool for: 
+    - **standardization** of commits
+    - **collaboration** 
+- Popular in python, [seeping into R](https://github.com/lorenzwalthert/precommit)
+
+---
+
+# A traffic light for your commits
+
+- Picture of workflow from:
+- `git add` -> traffic light (pre-commit) -> `git commit`
+
+---
+
+# Why use pre-commit hooks?
+
+- Safety measure to prevent adverse commits
+- Ensure everyone uses the same style (for collaboration)
+- Automate often forgotten repetitive practices
+
+---
+
+# Use cases
+
+- Prevent the commit of large files
+- Rendering `Rmd` to `md`. 
+- Styling (`stylr`)
+- linting (`lintr`)
+
+---
+
+# There are always trade-offs
+
+- E.g. lintr in GHA 
+- Trade-off being requirement for knowledge of pre-commit
+- Might be bigger factor for open-source collab 
+
+---
+
+# Step 1 - Install pre-commit on system
+
+- Only needs to be done once
+- `pip install pre-commit`
+- `brew install pre-commit`
+- `conda install -c conda-forge pre-commit`
+
+???
+
+Point: it's super easy
+
+--- 
+
+# Step 2 - Create a `.pre-commit-config.yaml`
+
+- Lives in the root of the directory. 
+- Example: https://github.com/dzhang32/rutils/blob/master/.pre-commit-config.yaml
+- This contains details of the hooks, their source and their config. 
+
+---
+
+# Step 3 - Set up environment for running pre-commits
+
+- `pre-commit install`
+- Every commit will be checked to pass your hooks. 
+- You're done! 
+
+---
+
+# Useful commands
+
+- Running against all files
+- 
+- 
+
+--- 
+
+# Creating your own hook
+
+- 
+- 
+
+
+---
+
+
+
