@@ -16,10 +16,14 @@ class: center, middle, inverse, title-slide
 # Precommit hooks in R
 ### David Zhang
 ### UCL
-### 2022/02/04 (updated: 2022-02-02)
+### 2022/02/04 (updated: 2022-02-03)
 
 ---
 
+
+background-image: url("git_hooks.png")
+background-size: 500px
+background-position: 50% 80%
 
 
 
@@ -33,104 +37,144 @@ class: center, middle, inverse, title-slide
 }
 &lt;/style&gt;
 
-# Outline 
+# What are git hooks?
 
-- The what and the why? 
-- Use cases
-- Alternatives and trade offs
-- In practice
+- Live inside the `.git/hooks` folder
+- **Customizable** scripts that run upon a certain action
 
 ---
 
+background-image: url("git_hooks_pre_commit_hl.png")
+background-size: 500px
+background-position: 50% 80%
+
 # What are pre-commit hooks? 
 
-- https://pre-commit.com
-- A developer tool for: 
-    - **standardization** of commits
-    - **collaboration** 
+- A developer tool for **regulation** of commits 
 - Popular in python, [seeping into R](https://github.com/lorenzwalthert/precommit)
 
 ---
 
-# A traffic light for your commits
+# A 🚦 for your commits
 
-- Picture of workflow from:
-- `git add` -&gt; traffic light (pre-commit) -&gt; `git commit`
+`git add` -&gt; pre-commit 🚦 -&gt; `git commit`
+
+???
+
+Conceptually, I like to think of them as...
+
+---
+
+# A 🚦 for your commits
+
+`git add` -&gt; pre-commit 🚦 -&gt; `git commit`
+
+- A set of rules (hooks) 
+- Your files must pass these hooks before they are committed
+
+???
+
+I like to think of them as...
+
+So why use... -&gt; 
 
 ---
 
 # Why use pre-commit hooks?
 
-- Safety measure to prevent adverse commits
-- Ensure everyone uses the same style (for collaboration)
-- Automate often forgotten repetitive practices
+1. Prevent adverse commits 🚫
+2. Ensure a consistent style or coding standard 🤖
+3. Enforce consistency for collaborative projects 👥
+4. Automate easily forgotten repetitive processes 😴
+
+???
+
+Not just for those with a long-standing fear of commitment...
+
+Broadly, from my experience, functionality falls into 4
+
+To make this more concrete... -&gt; 
 
 ---
 
-# Use cases
+# Use cases for R
 
-- Prevent the commit of large files
-- Rendering `Rmd` to `md`. 
-- Styling (`stylr`)
-- linting (`lintr`)
-
----
-
-# There are always trade-offs
-
-- E.g. lintr in GHA 
-- Trade-off being requirement for knowledge of pre-commit
-- Might be bigger factor for open-source collab 
+- Prevent the commit of large files 🚫
+- No `browser()` statements 🚫
+- Styling (`stylr`) 🤖 👥
+- linting (`lintr`) 🤖 👥
+- Rendering `Rmd` to `md` 😴
+- Running `devtools::document()` 😴
 
 ---
 
 # Step 1 - Install pre-commit on system
 
-- Only needs to be done once
-- `pip install pre-commit`
-- `brew install pre-commit`
-- `conda install -c conda-forge pre-commit`
+Only needs to be done **once** per system
+- [pre-commit](https://pre-commit.com) is framework for managing pre-commit hooks
+    - `pip install pre-commit`
+    - `brew install pre-commit`
+    - `conda install -c conda-forge pre-commit`
 
 ???
 
-Point: it's super easy
-
---- 
-
-# Step 2 - Create a `.pre-commit-config.yaml`
-
-- Lives in the root of the directory. 
-- Example: https://github.com/dzhang32/rutils/blob/master/.pre-commit-config.yaml
-- This contains details of the hooks, their source and their config. 
+It's super easy...
 
 ---
 
-# Step 3 - Set up environment for running pre-commits
+background-image: url("hook_ex.png")
+background-size: 800px
+background-position: 50% 80%
 
-- `pre-commit install`
-- Every commit will be checked to pass your hooks. 
-- You're done! 
+# Step 2 - Create a config file
+
+- `.pre-commit-config.yaml`
+- Lives in the root of the project
+- This contains details of the &lt;span style="color:red"&gt;source of the hook&lt;/span&gt;, &lt;span style="color:blue"&gt;hook id&lt;/span&gt; and &lt;span style="color:green"&gt; associated config&lt;/span&gt;
 
 ---
 
-# Useful commands
+# Step 3 - Install pre-commits
 
-- Running against all files
-- 
-- 
+- Run `pre-commit install` inside project
+- Every commit will be checked to pass your hooks
+- You're done!  😄
 
---- 
+???
+
+Do a demonstration, example of pre-configured project, show commit
+
+---
+
+# Useful tips
+
+- Running against all files - `pre-commit run --all-files`
+- Skip pre-commit - `git commit --no-verify -m "commit message"`
+- [Auto-enabling pre-commit](https://pre-commit.com/#automatically-enabling-pre-commit-on-repositories)
+
+---
 
 # Creating your own hook
 
-- 
-- 
-
+- [There are several hooks available for R projects](https://github.com/lorenzwalthert/precommit)
+- [Hooks have many supported languages](https://pre-commit.com/#new-hooks)
+- [Simple example](https://github.com/lorenzwalthert/precommit/blob/main/inst/hooks/exported/readme-rmd-rendered.R)
 
 ---
 
+# Alternatives and trade-offs
 
+E.g. lintr in GHA vs pre-commit
 
+- `pre-commit` occurs before commit
+- Requirement for knowledge of `pre-commit`
+- Security (use trusted sources!)
+
+---
+
+class: center, middle, inverse
+
+# Thank you for listening! 😄
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
