@@ -16,13 +16,12 @@ rmd_paths <-
 
 for(i in seq_along(rmd_paths)) {
 
-    html_name <- rmd_paths %>%
+    html_name <- rmd_paths[i] %>%
         stringr::str_remove(".*/") %>%
         stringr::str_replace("\\.Rmd$", ".html")
 
     rmarkdown::render(
-        input = rmd_paths[i],
-        output_file = here::here("docs", html_name)
+        input = rmd_paths[i]
         )
 
 }
