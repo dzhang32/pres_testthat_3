@@ -34,20 +34,21 @@ options(htmltools.dir.version = FALSE)
 # Overview
 
 - What/why R packages?
-- What are the best practices of developing R packages? 
+- What are the best practices for developing R packages? 
 - Where to release your R package
 
 ???
 
 * I will not be covering the how in this talk
 * I have tried to cram a lot in - hopefully a reference/starting point
+* So you can have some familiarity
 
 ---
 
 # Resources
 
 - [R packages book](https://r-pkgs.org/intro.html)
-- [These slides](https://github.com/dzhang32/rstats_pres)
+- [This presentation](https://github.com/dzhang32/rstats_pres)
 - [Developing Bioconductor packages workshop](https://github.com/dzhang32/biocthis_workshop)
 
 ???
@@ -65,6 +66,10 @@ background-position: 50% 90%
 - Essentially, text/image files and directories
 - Units of sharing R code
 
+???
+
+* We will come back to this image many times
+
 ---
 
 # What differentiates scripts from R packages?
@@ -73,22 +78,22 @@ background-position: 50% 90%
 - The number of different ways your functions is used
 - The number of different **environments** your code is executed
 
-- Scripts (1/few) --------------> Packages (Many)
+Scripts (1/few) --------------------> Packages (Many)
 
 ???
 
-* Almost wanted to call this slide "The dark side of popularity...|
+* Almost wanted to call this slide "The dark side of popularity...
 * The more users you have, the more problems you face!
 
 ---
 
-# When should you make an R packages?
+# When should you make an R package?
 
 - Will will the code be useful to others?
 - Do you want to learn? Improving the organization of your functions - e.g. mentality, documentation
 - Publication - [more citations](https://www.biorxiv.org/content/10.1101/2020.11.16.385211v1)
 
----
+???
 
 * There's a decision to be made - will the code be useful 
 * Once you cross the learning curve, it's very low cost
@@ -460,15 +465,16 @@ background-position: 50% 70%
 
 ---
 
-# Bioconductor vs CRAN vs R-universe vs GH
+# Bioconductor vs CRAN vs R-universe 
 
+- ... vs GitHub
 - Differ in terms of: 
     1. Stringency
     2. **User base**
     3. Coding/versioning standard
     4. Time-scale from submission to release
 
-??? 
+???
 
 * Jumping ahead, you've created your package, now where should it go?
 * Basically I would go based on user base
