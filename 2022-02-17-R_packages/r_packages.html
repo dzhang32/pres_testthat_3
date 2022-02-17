@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Best practices for R package development</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="David Zhang" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Best practices for R package development
+### David Zhang
+### UCL
+### 2022/02/04 (updated: 2022-02-17)
+
+---
+
+
+background-image: url("git_hooks.png")
+background-size: 500px
+background-position: 50% 80%
+
+
+
+&lt;!-- change font of all slides via css --&gt;
+&lt;!-- https://stackoverflow.com/questions/53481699/customize-font-size-for-all-the-slides-in-xaringan --&gt;
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 34px;
+    padding: 0.75em 1em 0.75em 1em;
+}
+&lt;/style&gt;
+
+# Overview
+
+- What/why R packages?
+- What are the best practices of developing R packages? 
+- Where to release your R package
+
+???
+
+* I will not be covering the how in this talk
+* I have tried to cram a lot in - hopefully a reference/starting point
+
+---
+
+# Resources
+
+- [R packages book](https://r-pkgs.org/intro.html)
+- [These slides](https://github.com/dzhang32/rstats_pres)
+- [Developing Bioconductor packages workshop](https://github.com/dzhang32/biocthis_workshop)
+
+???
+
+* The bible of R packages
+
+---
+
+background-image: url("dasper_ex.png")
+background-size: 500px
+background-position: 50% 90%
+
+# What are R packages?
+
+- Essentially, text/image files and directories
+- Units of sharing R code
+
+---
+
+# What differentiates scripts from R packages?
+
+- The number of users
+- The number of different ways your functions is used
+- The number of different **environments** your code is executed
+
+- Scripts (1/few) --------------&gt; Packages (Many)
+
+???
+
+* Almost wanted to call this slide "The dark side of popularity...|
+* The more users you have, the more problems you face!
+
+---
+
+# When should you make an R packages?
+
+- Will will the code be useful to others?
+- Do you want to learn? Improving the organization of your functions - e.g. mentality, documentation
+- Publication - [more citations](https://www.biorxiv.org/content/10.1101/2020.11.16.385211v1)
+
+---
+
+* There's a decision to be made - will the code be useful 
+* Once you cross the learning curve, it's very low cost
+
+---
+
+# R package principles
+
+1. **Reproducible** 🔄 
+2. **Robust** 💪 
+3. **User-friendly** 🛎 
+
+???
+
+* So how you protect against popularity...
+
+---
+
+# R package principles
+
+1. **Reproducible** - Can you install the package? 🔄 
+2. **Robust** - Does your code run as expected? 💪 
+3. **User-friendly** - Is your code/UI easy to understand? 🛎 
+
+???
+
+- The sort of questions that you should always ask yourself as you develop the package
+
+---
+
+# R package components
+
+- Dependencies 🔄
+- Version control 🔄
+- R CMD Check 🔄 💪
+- Continuous integration (using GitHub actions) 🔄 💪
+- Unit testing 💪
+- Functions/UI design 🛎
+- Documentation 🛎
+- Software design 🛎
+
+???
+
+* Not exhaustive, but most important components
+
+---
+
+# Top-level
+
+- &lt;span style="color:red"&gt;Problem&lt;/span&gt; (with scripts)
+- &lt;span style="color:green"&gt;Solution&lt;/span&gt; (with packages)
+- Principles
+
+???
+
+- I was deciding how best to explain this...
+
+---
+
+# Dependencies 🔄
+
+- &lt;span style="color:red"&gt;You share/receive an R script&lt;/span&gt;
+- &lt;span style="color:red"&gt;It doesn't run or errors&lt;/span&gt;
+- &lt;span style="color:red"&gt;You don't have or have different installed versions of packages that the code depends on&lt;/span&gt;
+
+---
+
+background-image: url("desc.png")
+background-size: 500px
+background-position: 50% 90%
+
+# Dependencies 🔄
+
+- &lt;span style="color:green"&gt;Add your package dependencies to your DESCRIPTION&lt;/span&gt;
+
+---
+
+background-image: url("desc_ex.png")
+background-size: 200px
+background-position: 50% 90%
+
+# Dependencies 🔄
+
+- &lt;span style="color:green"&gt;Includes all of the packages your package needs (Imports)&lt;/span&gt;
+- &lt;span style="color:green"&gt;And those it might need (Suggests)&lt;/span&gt;
+- &lt;span style="color:green"&gt;Installed with `install.packages("your_package")`&lt;/span&gt;
+
+???
+
+* Can also include version numbers
+
+---
+
+# Dependencies 🔄
+
+- Imports for majority of packages - all those used in your code
+- Suggests for those **only** used in your examples, tests, vignettes. 
+- The ~~more~~ less, the merrier
+
+???
+
+* Can also include version numbers
+
+---
+
+# Version control 🔄
+
+- &lt;span style="color:red"&gt;You make a backwards incompatible change&lt;/span&gt;
+- &lt;span style="color:red"&gt;Now you have to send your updated script to collaborators&lt;/span&gt;
+- &lt;span style="color:red"&gt;Some people might want to use the previous version&lt;/span&gt;
+
+???
+
+* This ends up very messy (e.g. script_1, script_2)
+* Your new script might depend on new packages
+
+---
+
+background-image: url("version.png")
+background-size: 600px
+background-position: 30% 70%
+
+# Version control 🔄
+
+- &lt;span style="color:green"&gt;Git and GitHub&lt;/span&gt;
+- &lt;span style="color:green"&gt;Version in DESCRIPTION&lt;/span&gt;
+- &lt;span style="color:green"&gt;Package hosted on same location, look through commits, install from any&lt;/span&gt;
+
+---
+
+# Version control 🔄
+
+- `1.5.1` - major.minor.patch
+- Major: Backwards incompatible changes
+- Minor: New features/optimisations
+- Patch: Bug fixes and documentation
+- Bioconductor breaks this rule, `R` in general is often unique (e.g. `1.5.1.9000`)
+
+???
+
+* Free for public repos ~6 cores, 6 hours
+* Keep it simple for now
+
+---
+
+# Unit testing 💪
+
+- &lt;span style="color:red"&gt;You often run tests locally and manually&lt;/span&gt;
+- &lt;span style="color:red"&gt;This takes time and isn't comprehensive&lt;/span&gt;
+- &lt;span style="color:red"&gt;Updated script could introduce breaking changes&lt;/span&gt;
+
+???
+
+* This often is okay for simple scripts/one-liners
+* But becomes a massive issue for big packages (e.g. ggplot2)
+* It's difficult to predict how collaborators will use your functions
+
+---
+
+background-image: url("unit_tests.png")
+background-size: 400px
+background-position: 50% 85%
+
+# Unit testing 💪
+
+- &lt;span style="color:green"&gt;Formalise and automate testing&lt;/span&gt;
+- &lt;span style="color:green"&gt;Run everytime you make a change to the package, you don't have to worry!&lt;/span&gt;
+
+???
+
+* If package doesn't have tests, don't be surprised but be cautious...
+
+---
+
+# Unit testing 💪
+
+- Error fast
+- The more, the merrier
+- Trade-off of time taken (Bioconductor sets limits of ~10-15mins for `R CMD Check`)
+- Use `testthat`
+
+---
+
+# R CMD Check 🔄 💪
+
+- &lt;span style="color:red"&gt;You edited your package or documentation&lt;/span&gt;
+- &lt;span style="color:red"&gt;It now doesn't install, errors&lt;/span&gt;
+- &lt;span style="color:red"&gt;You've already updated your Bioconductor package and users are running into problems&lt;/span&gt;
+
+---
+
+background-image: url("rcmdcheck.png")
+background-size: 300px
+background-position: 50% 90%
+
+# R CMD Check 🔄 💪
+
+- &lt;span style="color:green"&gt;`R CMD Check` is a command that runs **many** checks on your package&lt;/span&gt;
+- &lt;span style="color:green"&gt;Documentation, tests, dependencies, version... etc&lt;/span&gt;
+- &lt;span style="color:green"&gt;Makes sure you have no problems before updating&lt;/span&gt;
+- &lt;span style="color:green"&gt;Tells you what problems you have, so you can solve them&lt;/span&gt;
+
+---
+
+# R CMD Check 🔄 💪
+
+- Errors, Warnings, Notes
+- Run `R CMD Check` are any change to your package
+
+---
+
+# Continuous integration 🔄 💪
+
+- &lt;span style="color:red"&gt;You send a script, but errors occur&lt;/span&gt;
+- &lt;span style="color:red"&gt;All dependencies seem to be matching&lt;/span&gt;
+- &lt;span style="color:red"&gt;The person is a windows user!&lt;/span&gt; 😈
+
+---
+
+background-image: url("gha.png")
+background-size: 400px
+background-position: 50% 85%
+
+# Continuous integration 🔄 💪
+
+- &lt;span style="color:green"&gt;Use GitHub Actions (GHA) to test your package across any operating systems - FREE!&lt;/span&gt;
+- &lt;span style="color:green"&gt;Runs `R CMD Check` and all tests&lt;/span&gt;
+
+???
+
+- GHA is beyond the scope of this talk but...
+
+---
+
+background-image: url("gha_ex.png")
+background-size: 300px
+background-position: 50% 70%
+
+# Continuous integration 🔄 💪
+
+- GHA is getting more popular (travis/circleci are alternatives)
+- Consists of a `.yml` file that sits in `package_root/.github/workflows/`
+- We use it for testing but GHA is extremely flexible
+
+
+???
+
+- You could use it to automatically update a website (CRON job), or upload a docker file to docker Hub
+
+---
+
+# Functions/UI design 🛎
+
+- &lt;span style="color:red"&gt;You send a script to a collaborator&lt;/span&gt;
+- &lt;span style="color:red"&gt;They want to to do something slightly different to your analysis&lt;/span&gt;
+- &lt;span style="color:red"&gt;Takes them a long time to understand and modify your script&lt;/span&gt;
+
+???
+
+* Sid would appreciate this...
+
+---
+
+background-image: url("functions.png")
+background-size: 400px
+background-position: 50% 70%
+
+# Functions/UI design 🛎
+
+- &lt;span style="color:green"&gt;Create functions and put them inside a package&lt;/span&gt;
+- &lt;span style="color:green"&gt;Generalizes, improves readability and flexbility&lt;/span&gt;
+
+???
+
+* A bit of unfair comparison as of course, you can create functions within scripts
+* But packages force you to use functions and also document them
+
+---
+
+# Functions/UI design 🛎
+
+- Smaller modular functions (&lt;~60 lines) are better 
+- ^ For readability and testing
+- Design for users, then optimise for performance (if needed)
+- Two levels (UI vs internal)
+- Names are important! 
+
+???
+
+- Come back to UI vs internal, worth thinking about. Simplify UI
+
+---
+
+# Documentation 🛎
+
+- &lt;span style="color:red"&gt;You send a script to a collaborator&lt;/span&gt;
+- &lt;span style="color:red"&gt;They don't understand what the argument `ERs_w_annotation_all_tissues_width_ab_3_no_cells_sex_specific` is supposed to be&lt;/span&gt;
+
+---
+
+background-image: url("documentation.png")
+background-size: 350px
+background-position: 50% 70%
+
+# Documentation 🛎
+
+- &lt;span style="color:green"&gt;You create a function in your package&lt;/span&gt;
+- &lt;span style="color:green"&gt;`R CMD Check` forces you  document it using `roxygen`&lt;/span&gt;
+
+---
+
+# Documentation 🛎
+
+- Documentation is as important as code 
+- Examples are often better than explanations
+- Lot's more to document (comments inside code, data)
+- Write from the perspective of the audience
+- `R CMD Check` can only check that you have documentation, not that it's good. Ask friends, get feedback from users
+
+???
+
+* Easy to get caught up in the implementation
+* For functions - why would this be useful?
+
+---
+
+
+background-image: url("design.png")
+background-size: 350px
+background-position: 50% 70%
+
+# Software design 🛎
+
+- Often, we come across a stage where we have a set of scripts/functions
+- Create a design document 
+
+???
+
+* I hope that it is now more clear some of the practices you need to conform to
+* But how would you design the actual system 
+* This is area I am least familiar with but I think also not much out there documentation wise
+
+---
+
+# Software design 🛎
+
+- OOP vs functional programming
+- Design patterns
+- Encapsulation - break apart your thinking into user and implementation 
+- What will users need (at a minimum)? 
+- It is easier to add functionality than to take it away
+
+???
+
+* This operates at levels function arguments, which functions to export, 
+
+---
+
+# Software design 🛎
+
+- `GenomicRanges`
+- `start`, `end`, `width`
+- Internally, only stores two, calculates third
+
+???
+
+- Cool example of encapsulation/information hiding
+- Things are hidden from users
+
+---
+
+# Bioconductor vs CRAN vs R-universe vs GH
+
+- Differ in terms of: 
+    1. Stringency
+    2. **User base**
+    3. Coding/versioning standard
+    4. Time-scale from submission to release
+
+??? 
+
+* Jumping ahead, you've created your package, now where should it go?
+* Basically I would go based on user base
+
+---
+
+# Other tips
+
+- Use `browser()` (for debugging)
+- Maybe use `precommit hooks` (if you collaborate on a project)
+- Maybe include a `docker`s (if you have external dependencies)
+
+---
+
+class: center, middle, inverse
+
+# Thank you for listening! 😄
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

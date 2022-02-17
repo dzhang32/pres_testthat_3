@@ -1,0 +1,488 @@
+---
+title: "Best practices for R package development"
+author: "David Zhang"
+institute: "UCL"
+date: "2022/02/04 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+background-image: url("git_hooks.png")
+background-size: 500px
+background-position: 50% 80%
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+<!-- change font of all slides via css -->
+<!-- https://stackoverflow.com/questions/53481699/customize-font-size-for-all-the-slides-in-xaringan -->
+
+<style type="text/css">
+.remark-slide-content {
+    font-size: 34px;
+    padding: 0.75em 1em 0.75em 1em;
+}
+</style>
+
+# Overview
+
+- What/why R packages?
+- What are the best practices of developing R packages? 
+- Where to release your R package
+
+???
+
+* I will not be covering the how in this talk
+* I have tried to cram a lot in - hopefully a reference/starting point
+
+---
+
+# Resources
+
+- [R packages book](https://r-pkgs.org/intro.html)
+- [These slides](https://github.com/dzhang32/rstats_pres)
+- [Developing Bioconductor packages workshop](https://github.com/dzhang32/biocthis_workshop)
+
+???
+
+* The bible of R packages
+
+---
+
+background-image: url("dasper_ex.png")
+background-size: 500px
+background-position: 50% 90%
+
+# What are R packages?
+
+- Essentially, text/image files and directories
+- Units of sharing R code
+
+---
+
+# What differentiates scripts from R packages?
+
+- The number of users
+- The number of different ways your functions is used
+- The number of different **environments** your code is executed
+
+- Scripts (1/few) --------------> Packages (Many)
+
+???
+
+* Almost wanted to call this slide "The dark side of popularity...|
+* The more users you have, the more problems you face!
+
+---
+
+# When should you make an R packages?
+
+- Will will the code be useful to others?
+- Do you want to learn? Improving the organization of your functions - e.g. mentality, documentation
+- Publication - [more citations](https://www.biorxiv.org/content/10.1101/2020.11.16.385211v1)
+
+---
+
+* There's a decision to be made - will the code be useful 
+* Once you cross the learning curve, it's very low cost
+
+---
+
+# R package principles
+
+1. **Reproducible** `r emo::ji("counterclockwise_arrows_button")` 
+2. **Robust** `r emo::ji("flexed_biceps")` 
+3. **User-friendly** `r emo::ji("bellhop_bell")` 
+
+???
+
+* So how you protect against popularity...
+
+---
+
+# R package principles
+
+1. **Reproducible** - Can you install the package? `r emo::ji("counterclockwise_arrows_button")` 
+2. **Robust** - Does your code run as expected? `r emo::ji("flexed_biceps")` 
+3. **User-friendly** - Is your code/UI easy to understand? `r emo::ji("bellhop_bell")` 
+
+???
+
+- The sort of questions that you should always ask yourself as you develop the package
+
+---
+
+# R package components
+
+- Dependencies `r emo::ji("counterclockwise_arrows_button")`
+- Version control `r emo::ji("counterclockwise_arrows_button")`
+- R CMD Check `r emo::ji("counterclockwise_arrows_button")` `r emo::ji("flexed_biceps")`
+- Continuous integration (using GitHub actions) `r emo::ji("counterclockwise_arrows_button")` `r emo::ji("flexed_biceps")`
+- Unit testing `r emo::ji("flexed_biceps")`
+- Functions/UI design `r emo::ji("bellhop_bell")`
+- Documentation `r emo::ji("bellhop_bell")`
+- Software design `r emo::ji("bellhop_bell")`
+
+???
+
+* Not exhaustive, but most important components
+
+---
+
+# Top-level
+
+- <span style="color:red">Problem</span> (with scripts)
+- <span style="color:green">Solution</span> (with packages)
+- Principles
+
+???
+
+- I was deciding how best to explain this...
+
+---
+
+# Dependencies `r emo::ji("counterclockwise_arrows_button")`
+
+- <span style="color:red">You share/receive an R script</span>
+- <span style="color:red">It doesn't run or errors</span>
+- <span style="color:red">You don't have or have different installed versions of packages that the code depends on</span>
+
+---
+
+background-image: url("desc.png")
+background-size: 500px
+background-position: 50% 90%
+
+# Dependencies `r emo::ji("counterclockwise_arrows_button")`
+
+- <span style="color:green">Add your package dependencies to your DESCRIPTION</span>
+
+---
+
+background-image: url("desc_ex.png")
+background-size: 200px
+background-position: 50% 90%
+
+# Dependencies `r emo::ji("counterclockwise_arrows_button")`
+
+- <span style="color:green">Includes all of the packages your package needs (Imports)</span>
+- <span style="color:green">And those it might need (Suggests)</span>
+- <span style="color:green">Installed with `install.packages("your_package")`</span>
+
+???
+
+* Can also include version numbers
+
+---
+
+# Dependencies `r emo::ji("counterclockwise_arrows_button")`
+
+- Imports for majority of packages - all those used in your code
+- Suggests for those **only** used in your examples, tests, vignettes. 
+- The ~~more~~ less, the merrier
+
+???
+
+* Can also include version numbers
+
+---
+
+# Version control `r emo::ji("counterclockwise_arrows_button")`
+
+- <span style="color:red">You make a backwards incompatible change</span>
+- <span style="color:red">Now you have to send your updated script to collaborators</span>
+- <span style="color:red">Some people might want to use the previous version</span>
+
+???
+
+* This ends up very messy (e.g. script_1, script_2)
+* Your new script might depend on new packages
+
+---
+
+background-image: url("version.png")
+background-size: 600px
+background-position: 30% 70%
+
+# Version control `r emo::ji("counterclockwise_arrows_button")`
+
+- <span style="color:green">Git and GitHub</span>
+- <span style="color:green">Version in DESCRIPTION</span>
+- <span style="color:green">Package hosted on same location, look through commits, install from any</span>
+
+---
+
+# Version control `r emo::ji("counterclockwise_arrows_button")`
+
+- `1.5.1` - major.minor.patch
+- Major: Backwards incompatible changes
+- Minor: New features/optimisations
+- Patch: Bug fixes and documentation
+- Bioconductor breaks this rule, `R` in general is often unique (e.g. `1.5.1.9000`)
+
+???
+
+* Free for public repos ~6 cores, 6 hours
+* Keep it simple for now
+
+---
+
+# Unit testing `r emo::ji("flexed_biceps")`
+
+- <span style="color:red">You often run tests locally and manually</span>
+- <span style="color:red">This takes time and isn't comprehensive</span>
+- <span style="color:red">Updated script could introduce breaking changes</span>
+
+???
+
+* This often is okay for simple scripts/one-liners
+* But becomes a massive issue for big packages (e.g. ggplot2)
+* It's difficult to predict how collaborators will use your functions
+
+---
+
+background-image: url("unit_tests.png")
+background-size: 400px
+background-position: 50% 85%
+
+# Unit testing `r emo::ji("flexed_biceps")`
+
+- <span style="color:green">Formalise and automate testing</span>
+- <span style="color:green">Run everytime you make a change to the package, you don't have to worry!</span>
+
+???
+
+* If package doesn't have tests, don't be surprised but be cautious...
+
+---
+
+# Unit testing `r emo::ji("flexed_biceps")`
+
+- Error fast
+- The more, the merrier
+- Trade-off of time taken (Bioconductor sets limits of ~10-15mins for `R CMD Check`)
+- Use `testthat`
+
+---
+
+# R CMD Check `r emo::ji("counterclockwise_arrows_button")` `r emo::ji("flexed_biceps")`
+
+- <span style="color:red">You edited your package or documentation</span>
+- <span style="color:red">It now doesn't install, errors</span>
+- <span style="color:red">You've already updated your Bioconductor package and users are running into problems</span>
+
+---
+
+background-image: url("rcmdcheck.png")
+background-size: 300px
+background-position: 50% 90%
+
+# R CMD Check `r emo::ji("counterclockwise_arrows_button")` `r emo::ji("flexed_biceps")`
+
+- <span style="color:green">`R CMD Check` is a command that runs **many** checks on your package</span>
+- <span style="color:green">Documentation, tests, dependencies, version... etc</span>
+- <span style="color:green">Makes sure you have no problems before updating</span>
+- <span style="color:green">Tells you what problems you have, so you can solve them</span>
+
+---
+
+# R CMD Check `r emo::ji("counterclockwise_arrows_button")` `r emo::ji("flexed_biceps")`
+
+- Errors, Warnings, Notes
+- Run `R CMD Check` are any change to your package
+
+---
+
+# Continuous integration `r emo::ji("counterclockwise_arrows_button")` `r emo::ji("flexed_biceps")`
+
+- <span style="color:red">You send a script, but errors occur</span>
+- <span style="color:red">All dependencies seem to be matching</span>
+- <span style="color:red">The person is a windows user!</span> `r emo::ji("smiling_face_with_horns")`
+
+---
+
+background-image: url("gha.png")
+background-size: 400px
+background-position: 50% 85%
+
+# Continuous integration `r emo::ji("counterclockwise_arrows_button")` `r emo::ji("flexed_biceps")`
+
+- <span style="color:green">Use GitHub Actions (GHA) to test your package across any operating systems - FREE!</span>
+- <span style="color:green">Runs `R CMD Check` and all tests</span>
+
+???
+
+- GHA is beyond the scope of this talk but...
+
+---
+
+background-image: url("gha_ex.png")
+background-size: 300px
+background-position: 50% 70%
+
+# Continuous integration `r emo::ji("counterclockwise_arrows_button")` `r emo::ji("flexed_biceps")`
+
+- GHA is getting more popular (travis/circleci are alternatives)
+- Consists of a `.yml` file that sits in `package_root/.github/workflows/`
+- We use it for testing but GHA is extremely flexible
+
+
+???
+
+- You could use it to automatically update a website (CRON job), or upload a docker file to docker Hub
+
+---
+
+# Functions/UI design `r emo::ji("bellhop_bell")`
+
+- <span style="color:red">You send a script to a collaborator</span>
+- <span style="color:red">They want to to do something slightly different to your analysis</span>
+- <span style="color:red">Takes them a long time to understand and modify your script</span>
+
+???
+
+* Sid would appreciate this...
+
+---
+
+background-image: url("functions.png")
+background-size: 400px
+background-position: 50% 70%
+
+# Functions/UI design `r emo::ji("bellhop_bell")`
+
+- <span style="color:green">Create functions and put them inside a package</span>
+- <span style="color:green">Generalizes, improves readability and flexbility</span>
+
+???
+
+* A bit of unfair comparison as of course, you can create functions within scripts
+* But packages force you to use functions and also document them
+
+---
+
+# Functions/UI design `r emo::ji("bellhop_bell")`
+
+- Smaller modular functions (<~60 lines) are better 
+- ^ For readability and testing
+- Design for users, then optimise for performance (if needed)
+- Two levels (UI vs internal)
+- Names are important! 
+
+???
+
+- Come back to UI vs internal, worth thinking about. Simplify UI
+
+---
+
+# Documentation `r emo::ji("bellhop_bell")`
+
+- <span style="color:red">You send a script to a collaborator</span>
+- <span style="color:red">They don't understand what the argument `ERs_w_annotation_all_tissues_width_ab_3_no_cells_sex_specific` is supposed to be</span>
+
+---
+
+background-image: url("documentation.png")
+background-size: 350px
+background-position: 50% 70%
+
+# Documentation `r emo::ji("bellhop_bell")`
+
+- <span style="color:green">You create a function in your package</span>
+- <span style="color:green">`R CMD Check` forces you  document it using `roxygen`</span>
+
+---
+
+# Documentation `r emo::ji("bellhop_bell")`
+
+- Documentation is as important as code 
+- Examples are often better than explanations
+- Lot's more to document (comments inside code, data)
+- Write from the perspective of the audience
+- `R CMD Check` can only check that you have documentation, not that it's good. Ask friends, get feedback from users
+
+???
+
+* Easy to get caught up in the implementation
+* For functions - why would this be useful?
+
+---
+
+
+background-image: url("design.png")
+background-size: 350px
+background-position: 50% 70%
+
+# Software design `r emo::ji("bellhop_bell")`
+
+- Often, we come across a stage where we have a set of scripts/functions
+- Create a design document 
+
+???
+
+* I hope that it is now more clear some of the practices you need to conform to
+* But how would you design the actual system 
+* This is area I am least familiar with but I think also not much out there documentation wise
+
+---
+
+# Software design `r emo::ji("bellhop_bell")`
+
+- OOP vs functional programming
+- Design patterns
+- Encapsulation - break apart your thinking into user and implementation 
+- What will users need (at a minimum)? 
+- It is easier to add functionality than to take it away
+
+???
+
+* This operates at levels function arguments, which functions to export, 
+
+---
+
+# Software design `r emo::ji("bellhop_bell")`
+
+- `GenomicRanges`
+- `start`, `end`, `width`
+- Internally, only stores two, calculates third
+
+???
+
+- Cool example of encapsulation/information hiding
+- Things are hidden from users
+
+---
+
+# Bioconductor vs CRAN vs R-universe vs GH
+
+- Differ in terms of: 
+    1. Stringency
+    2. **User base**
+    3. Coding/versioning standard
+    4. Time-scale from submission to release
+
+??? 
+
+* Jumping ahead, you've created your package, now where should it go?
+* Basically I would go based on user base
+
+---
+
+# Other tips
+
+- Use `browser()` (for debugging)
+- Maybe use `precommit hooks` (if you collaborate on a project)
+- Maybe include a `docker`s (if you have external dependencies)
+
+---
+
+class: center, middle, inverse
+
+# Thank you for listening! `r emo::ji("smile")`
