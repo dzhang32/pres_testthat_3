@@ -43,7 +43,7 @@ background-position: 50% 80%
 
 &lt;style type="text/css"&gt;
 table {
-  font-size: 12px;     
+  font-size: 14px;     
 }
 
 /* custom.css */
@@ -69,14 +69,23 @@ table {
 ---
 
 background-image: url("https://raw.githubusercontent.com/dzhang32/ggtranscript/main/man/figures/ggtranscript_logo.png")
-background-size: 200px
-background-position: 80% 80%
+background-size: 300px
+background-position: 50% 80%
 
 # Introducing ggtranscript
 
 - https://github.com/dzhang32/ggtranscript
 - R package available through GitHub, soon to be Bioconductor
 - ggplot2 extension, inherits functionality and flexibility
+
+---
+
+# Introducing ggtranscript
+
+- Introduces 5 new geoms
+- geom_range(), geom_half_range(), geom_intron(), geom_junction() and geom_junction_label_repel()
+- And several helper functions
+- Feedback is much appreciated! 😄
 
 ---
 
@@ -119,9 +128,330 @@ sod1_exons %&gt;%
 ]
 
 .right-plot[
-&lt;img src="ggtranscript_files/figure-html/plot-exons-intronsl-out-1.png" width="100%" /&gt;
+&lt;img src="ggtranscript_files/figure-html/plot-exons-introns-out-1.png" width="100%" /&gt;
 ]
 
+---
+
+# Differentiating UTRs from the coding sequence
+
+.left-code[
+
+```r
+sod1_exons_prot_cod &lt;- sod1_exons %&gt;%
+    dplyr::filter(transcript_biotype == "protein_coding")
+sod1_cds &lt;- sod1_annotation %&gt;% dplyr::filter(type == "CDS")
+
+sod1_exons_prot_cod %&gt;%
+    ggplot(aes(
+        xstart = start,
+        xend = end,
+        y = transcript_name
+    )) +
+    geom_range(
+        fill = "white",
+        height = 0.25
+    ) +
+    geom_range(
+        data = sod1_cds
+    ) +
+    geom_intron(
+        data = to_intron(sod1_exons_prot_cod, "transcript_name"),
+        aes(strand = strand),
+        arrow.min.intron.length = 500,
+    )
+```
+]
+
+.right-plot[
+&lt;img src="ggtranscript_files/figure-html/plot-cds-out-1.png" width="100%" /&gt;
+]
+
+???
+
+`geom_range()` is designed to visualize range-based transcript annotation. This includes but is not limited to exons. For instance, for protein coding transcripts it can be useful to visually distinguish the coding sequence (CDS) of a transcript from it's UTRs.
+
+---
+
+# Plotting junctions
+
+.left-code[
+
+```r
+sod1_201_exons &lt;- sod1_exons %&gt;% dplyr::filter(transcript_name == "SOD1-201")
+sod1_201_cds &lt;- sod1_cds %&gt;% dplyr::filter(transcript_name == "SOD1-201")
+
+sod1_junctions &lt;- sod1_junctions %&gt;% dplyr::mutate(transcript_name = "SOD1-201")
+
+sod1_201_exons %&gt;%
+  ggplot(aes(
+    xstart = start,
+    xend = end,
+    y = transcript_name
+  )) +
+  geom_range(
+    fill = "white", 
+    height = 0.25
+  ) +
+  geom_range(
+    data = sod1_201_cds
+  ) + 
+  geom_intron(
+    data = to_intron(sod1_201_exons, "transcript_name")
+  ) + 
+  geom_junction(
+    data = sod1_junctions,
+    aes(size = mean_count),
+    junction.y.max = 0.5
+  ) +
+  geom_junction_label_repel(
+    data = sod1_junctions,
+    aes(label = round(mean_count, 2)),
+    junction.y.max = 0.5
+  ) + 
+  scale_size_continuous(range = c(0.1, 1))
+```
+]
+
+.right-plot[
+&lt;img src="ggtranscript_files/figure-html/plot-junctions-out-1.png" width="100%" /&gt;
+]
+
+---
+
+# Inheriting ggplot2's functionality
+
+.left-code[
+
+```r
+sod1_201_exons %&gt;%
+  ggplot(aes(
+    xstart = start,
+    xend = end,
+    y = transcript_name
+  )) +
+  geom_range(
+    fill = "white", 
+    height = 0.25
+  ) +
+  geom_range(
+    data = sod1_201_cds
+  ) + 
+  geom_intron(
+    data = to_intron(sod1_201_exons, "transcript_name")
+  ) + 
+  geom_junction(
+    data = sod1_junctions,  
+*   colour = "purple",
+    aes(size = mean_count),
+    junction.y.max = 0.5, 
+    ncp = 30
+  ) +
+  scale_size_continuous(range = c(0.1, 1)) + 
+* theme_bw()
+```
+]
+
+.right-plot[
+&lt;img src="ggtranscript_files/figure-html/plot-junctions-2-out-1.png" width="100%" /&gt;
+]
+
+---
+
+# Visualizing transcript structure differences
+
+.left-code[
+
+```r
+pknox1_exons &lt;- pknox1_annotation %&gt;% dplyr::filter(type == "exon")
+pknox1_exons %&gt;%
+    ggplot(aes(
+        xstart = start,
+        xend = end,
+        y = transcript_name
+    )) +
+    geom_range(
+        aes(fill = transcript_biotype)
+    ) +
+    geom_intron(
+        data = to_intron(pknox1_exons, "transcript_name"),
+        aes(strand = strand), 
+        arrow.min.intron.length = 3500
+    )
+```
+]
+
+.right-plot[
+&lt;img src="ggtranscript_files/figure-html/plot-diff-out-1.png" width="100%" /&gt;
+]
+
+---
+
+# Improving transcript visualization with shorten_gaps()
+
+.left-code[
+
+```r
+# extract exons
+pknox1_exons &lt;- pknox1_annotation %&gt;% dplyr::filter(type == "exon")
+*pknox1_rescaled &lt;- shorten_gaps(
+  exons = pknox1_exons, 
+  introns = to_intron(pknox1_exons, "transcript_name"), 
+  group_var = "transcript_name"
+)
+# shorten_gaps() returns exons and introns all in one data.frame()
+# let's split these for plotting 
+pknox1_rescaled_exons &lt;- pknox1_rescaled %&gt;% dplyr::filter(type == "exon") 
+pknox1_rescaled_introns &lt;- pknox1_rescaled %&gt;% dplyr::filter(type == "intron") 
+pknox1_rescaled_exons %&gt;% 
+    ggplot(aes(
+        xstart = start,
+        xend = end,
+        y = transcript_name
+    )) +
+    geom_range(
+        aes(fill = transcript_biotype)
+    ) +
+    geom_intron(
+        data = pknox1_rescaled_introns,
+        aes(strand = strand), 
+        arrow.min.intron.length = 300
+    )
+```
+]
+
+.right-plot[
+&lt;img src="ggtranscript_files/figure-html/plot-diff-2-out-1.png" width="100%" /&gt;
+]
+
+---
+
+# Comparing two transcripts with geom_half_range()
+
+.left-code[
+
+```r
+# extract the two transcripts to be compared
+pknox1_rescaled_201_exons &lt;- pknox1_rescaled_exons %&gt;% 
+  dplyr::filter(transcript_name == "PKNOX1-201")
+pknox1_rescaled_203_exons &lt;- pknox1_rescaled_exons %&gt;% 
+  dplyr::filter(transcript_name == "PKNOX1-203")
+pknox1_rescaled_201_exons %&gt;%
+    ggplot(aes(
+        xstart = start,
+        xend = end,
+        y = "PKNOX1-201/203"
+    )) +
+    geom_half_range() +
+    geom_intron(
+        data = to_intron(pknox1_rescaled_201_exons, "transcript_name"), 
+        arrow.min.intron.length = 300
+    ) +
+    geom_half_range(
+        data = pknox1_rescaled_203_exons,
+        range.orientation = "top", 
+        fill = "purple"
+    ) +
+    geom_intron(
+        data = to_intron(pknox1_rescaled_203_exons, "transcript_name"), 
+        arrow.min.intron.length = 300
+    )
+```
+]
+
+.right-plot[
+&lt;img src="ggtranscript_files/figure-html/plot-diff-3-out-1.png" width="100%" /&gt;
+]
+
+---
+
+# Zooming using ggforce::facet_zoom()
+
+.left-code[
+
+```r
+pknox1_rescaled_201_exons %&gt;%
+    ggplot(aes(
+        xstart = start,
+        xend = end,
+        y = "PKNOX1-201/203"
+    )) +
+    geom_half_range() +
+    geom_intron(
+        data = to_intron(pknox1_rescaled_201_exons, "transcript_name"), 
+        arrow.min.intron.length = 300
+    ) +
+    geom_half_range(
+        data = pknox1_rescaled_203_exons,
+        range.orientation = "top", 
+        fill = "purple"
+    ) +
+    geom_intron(
+        data = to_intron(pknox1_rescaled_203_exons, "transcript_name"), 
+        arrow.min.intron.length = 300
+    ) + 
+    ggforce::facet_zoom(xlim = c(0, 300))
+```
+]
+
+.right-plot[
+&lt;img src="ggtranscript_files/figure-html/plot-diff-5-out-1.png" width="100%" /&gt;
+]
+
+
+---
+
+# Comparing to a single reference transcript with to_diff()
+
+.left-code[
+
+```r
+mane &lt;- pknox1_rescaled_201_exons
+not_mane &lt;- pknox1_rescaled_exons %&gt;% 
+  dplyr::filter(transcript_name != "PKNOX1-201")
+
+*pknox1_rescaled_diffs &lt;- to_diff(
+    exons = not_mane,
+    ref_exons = mane,
+    group_var = "transcript_name"
+)
+
+pknox1_rescaled_exons %&gt;%
+    ggplot(aes(
+        xstart = start,
+        xend = end,
+        y = transcript_name
+    )) +
+    geom_range() +
+    geom_intron(
+        data = pknox1_rescaled_introns,
+        arrow.min.intron.length = 300
+    ) +
+    geom_range(
+        data = pknox1_rescaled_diffs,
+        aes(fill = diff_type),
+        alpha = 0.2
+    )
+```
+]
+
+.right-plot[
+&lt;img src="ggtranscript_files/figure-html/plot-diff-4-out-1.png" width="100%" /&gt;
+]
+
+---
+
+# Conclusions
+
+- ggtranscript makes it easy to visualize and compare transcript structures 
+- Lots of functionality as a ggplot2 extension
+- Faster and more flexible than existing tools
+
+---
+
+class: center, middle, inverse
+
+# Thank you for listening! 😄
 
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
