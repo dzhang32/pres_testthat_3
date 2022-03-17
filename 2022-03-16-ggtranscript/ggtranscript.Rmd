@@ -1,6 +1,6 @@
 ---
 title: "ggtranscript: Visualizing transcript structure and annotation using ggplot2"
-author: "David Zhang"
+author: "David Zhang & Emil Gustavsson"
 institute: "UCL"
 date: "2022/02/04 (updated: `r Sys.Date()`)"
 output:
