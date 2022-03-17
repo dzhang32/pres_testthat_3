@@ -1,0 +1,130 @@
+---
+title: "ggtranscript: Visualizing transcript structure and annotation using ggplot2"
+author: "David Zhang"
+institute: "UCL"
+date: "2022/02/04 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: 16:9
+---
+
+background-image: url("git_hooks.png")
+background-size: 500px
+background-position: 50% 80%
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggtranscript)
+
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(fig.dim = c(10, 6), fig.retina=2, out.width="100%")
+```
+
+<!-- change font of all slides via css -->
+<!-- https://stackoverflow.com/questions/53481699/customize-font-size-for-all-the-slides-in-xaringan -->
+
+<style type="text/css">
+.remark-slide-content {
+    font-size: 34px;
+    padding: 0.75em 1em 0.75em 1em;
+}
+.remark-code, .remark-inline-code { 
+    font-family: 'Source Code Pro', 'Lucida Console', Monaco, monospace;
+    font-size: 30%;
+}
+</style>
+
+```{css, echo = F}
+table {
+  font-size: 12px;     
+}
+
+/* custom.css */
+.left-code {
+  color: #777;
+  width: 38%;
+  height: 92%;
+  float: left;
+}
+.right-plot {
+  width: 60%;
+  float: right;
+  padding-left: 1%;
+}
+```
+
+# Visualizing transcript structures and annotation
+
+- The core components of transcript structures are exons and introns
+- Exons can be broken down into CDS and UTRs
+- Currently visualized through Ensembl/IGV/Gviz
+
+---
+
+background-image: url("https://raw.githubusercontent.com/dzhang32/ggtranscript/main/man/figures/ggtranscript_logo.png")
+background-size: 200px
+background-position: 80% 80%
+
+# Introducing ggtranscript
+
+- https://github.com/dzhang32/ggtranscript
+- R package available through GitHub, soon to be Bioconductor
+- ggplot2 extension, inherits functionality and flexibility
+
+---
+
+# Required input data
+
+- Data formats are widely used in genetic and transcriptomic analyses
+- Requires a data.frame()
+
+```{r, echo = FALSE}
+
+dplyr::tribble(
+    ~`Required aes()`, ~Type, ~Description, ~`Required by`,
+    #-------|-----|----|--------
+    "xstart", "integer", "Start position in base pairs", "All geoms", 
+    "xend", "integer", "End position in base pairs", "All geoms", 
+    "y", "charactor or factor", "The group used for the y axis, most often a transcript id or name ", "All geoms",
+    "label", "integer or charactor", "Variable used to label junction curves", "Only geom_junction_label_repel()",
+) %>% 
+  knitr::kable()
+
+```
+
+---
+
+# Plotting exons and introns
+
+.left-code[
+```{r plot-exons-introns, eval=FALSE}
+sod1_exons <- sod1_annotation %>% dplyr::filter(type == "exon")
+
+sod1_exons %>%
+    ggplot(aes(
+        xstart = start,
+        xend = end,
+        y = transcript_name
+    )) +
+    geom_range(
+        aes(fill = transcript_biotype)
+    ) +
+    geom_intron(
+        data = to_intron(sod1_exons, "transcript_name"),
+        aes(strand = strand)
+    )
+```
+]
+
+.right-plot[
+```{r plot-exons-intronsl-out, ref.label="plot-exons-introns", echo=FALSE}
+```
+]
+
+
